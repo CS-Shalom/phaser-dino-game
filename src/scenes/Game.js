@@ -7,15 +7,53 @@ export class Game extends Scene {
     constructor() {
         super('Game');
         this.player = null;
+        let player;
+        let ground;
+        let couds;
+
     }
 
     preload() {
+        //this.load.image("dino", "assets/dino-idle.png");
+        this.load.spritesheet("dino", "assets/dino-run.png", {frameWidth: 88, frameHeight:94});
+        this.load.image("ground", "assets/ground.png");
+        this.load.image("cloud", "assets/cloud.png");
+
     }
 
     create() {
+        //this.add.image (200, 200, "dino").setOrigin(0);
+        //this.physics.add.sprite (200, 200, "dino").setOrigin(0);
+        //this.player = this.physics.add.sprite (200, 200, "dino").setOrigin(0);
+        this.player = this.physics.add.sprite (200, 200, "dino")
+            .setOrigin (0, 1)
+            .setGravityY (5000)
+            .setCollideWorldBounds(true)
+            .setBodySize(44, 92);
+        //this.add.image(100, 280, "ground").setOrigin(0);
+        //this.ground = this.add.image(100, 280, "ground").setOrigin(0);
+        this.ground = this.add.tileSprite(0, 300, 1000, 30, "ground").setOrigin (0, 1);
+        //this.add.image (200, 100, "cloud").setOrigin(0);
+        //this.add.image (300, 130, "cloud").setOrigin(0);
+        //this.add.image (450, 90, "cloud").setOrigin(0);
+        this.clouds = this.add.group();
+        this.clouds = this.clouds.addMultiple([ 
+            this.add.image (200, 100, "cloud"), 
+            this.add.image (300, 130, "cloud"), 
+            this.add.image (450, 80, "cloud"),
+        ])
+        this.gameSpeed = 5;
+
+        this.groundCollider = this.physics.add.staticSprite(0, 300, "ground").setOrigin(0, 1); 
+        this.groundCollider.body.setSize(1000, 30); // Adjust collision size if necessary
+        this.physics.add.collider(this.player, this.groundCollider);
+        
+
+
     }
 
     update() {
+        this.ground.tilePositionX += this.gameSpeed;
     }
 
 }
