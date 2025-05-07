@@ -18,14 +18,28 @@ export class Game extends Scene {
         this.load.spritesheet("dino", "assets/dino-run.png", {frameWidth: 88, frameHeight:94});
         this.load.image("ground", "assets/ground.png");
         this.load.image("cloud", "assets/cloud.png");
+        //
+        this.load.image ("game-over", "assets/game-over.png");
+        this.load.image("restart", "assets/restart.png");
+//
+        for(let i = 0; i < 6; i++) {
+        const cactusNum = i + 1;
+        this.load.image(`obstacle-${cactusNum}`,`assets/cactuses_${cactusNum}.png`);
+        }
 
     }
 
     create() {
+        this.isGameRunning = true;
+        this.gameSpeed = 5;
+        this.timer = 0;
+        this.score = 0;
+        this.frameCounter = 0;
         //this.add.image (200, 200, "dino").setOrigin(0);
         //this.physics.add.sprite (200, 200, "dino").setOrigin(0);
         //this.player = this.physics.add.sprite (200, 200, "dino").setOrigin(0);
         this.player = this.physics.add.sprite (200, 200, "dino")
+            .setDepth(1)
             .setOrigin (0, 1)
             .setGravityY (5000)
             .setCollideWorldBounds(true)
@@ -42,18 +56,91 @@ export class Game extends Scene {
             this.add.image (300, 130, "cloud"), 
             this.add.image (450, 80, "cloud"),
         ])
-        this.gameSpeed = 5;
 
+        //
         this.groundCollider = this.physics.add.staticSprite(0, 300, "ground").setOrigin(0, 1); 
         this.groundCollider.body.setSize(1000, 30); // Adjust collision size if necessary
         this.physics.add.collider(this.player, this.groundCollider);
+        //
+        this.obstacles = this.physics.add.group({
+            allowGravity: false // No gravity for cactuses
+        });
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.physics.add.collider(this.obstacles, this.player, gameOver, null, this);
+        //
+        this.gameOverText = this.add.image(0, 0, "game-over");
+        this.restartText = this.add.image(0, 80, "restart").setInteractive();
+        this.gameOverContainer = this.add
+            .container(1000 / 2, (300 / 2) - 50)
+            .add([this.gameOverText, this.restartText])
+            .setAlpha(0)
         
-
+        this.scoreText = this.add.text(700, 50, "00000", { 
+            fontSize: 38, fontFamily: "Arial", color: "#535353", resolution: 5
+        }).setOrigin (1,0);
 
     }
 
-    update() {
+    update(time, delta) {
+        if(!this.isGameRunning) {return;};
+        //this.ground.tilePositionX += this.gameSpeed;
+        //
+        //this.obstacleNum = Math.floor(Math.random() * 6) + 1;
+        //this.obstacles.create(500, 220, `obstacle-${this.obstacleNum}`).setOrigin(0);
         this.ground.tilePositionX += this.gameSpeed;
+
+        this.timer += delta;
+        console.log(this.timer);
+        if (this.timer > 1000) {
+            this.obstacleNum = Math.floor(Math.random() * 6) + 1;
+            this.obstacles.create(750, 220, `obstacle-${this.obstacleNum}`).setOrigin(0); 
+            this.timer -= 1000;
+        }
+        Phaser.Actions.IncX(this.obstacles.getChildren(), -this.gameSpeed);
+        this.obstacles.getChildren().forEach(obstacle => {
+	    if (obstacle.getBounds().right < 0) {
+		    this.obstacles.remove(obstacle);
+		    obstacle.destroy();
+	    }
+        })
+
+        const { space, up } = this.cursors;
+        //if (space.isDown || up.isDown) {
+        //    this.player.setVelocityY (-1600);
+        //}
+        if (Phaser.Input.Keyboard.JustDown (space) || Phaser.Input.Keyboard.JustDown (up) && this.player.body.onFloor() ) {
+            this.player.setVelocityY(-1600);
+        }
+        //
+        this.restartText.on("pointerdown", () => {
+        this.physics.resume();
+        this.player.setVelocityY(0);
+        this.obstacles.clear(true, true);
+        this.gameOverContainer.setAlpha(0); 
+        this.frameCounter = 0;
+        this.score = 0;
+        const formattedScore = String(Math.floor(this.score)).padStart(5, "0");
+        this.scoreText.setText(formattedScore);
+        this.isGameRunning = true;
+        })
+
+        this.frameCounter++;
+        if (this.frameCounter > 100) {
+            this.score += 100;
+            const formattedScore = String(Math.floor(this.score)).padStart(5, "0"); 
+            this.scoreText.setText(formattedScore);
+            this.frameCounter == 100;
+        }
+
     }
+
+
 
 }
+    function gameOver() {
+        this.physics.pause();
+        this.timer = 0;
+        this.isGameRunning = false;
+        this.gameOverContainer.setAlpha(1);
+    }
+    
