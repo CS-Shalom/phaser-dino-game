@@ -78,6 +78,14 @@ export class Game extends Scene {
         this.scoreText = this.add.text(700, 50, "00000", { 
             fontSize: 38, fontFamily: "Arial", color: "#535353", resolution: 5
         }).setOrigin (1,0);
+        //display high score
+        this.highScore = 0;
+        this.highScoreText = this.add.text(700, 0, "High: 00000", {
+            fontSize: 39, fontFamily: "Arial", color: "#535353", resolution: 5
+        }).setOrigin(1,0).setAlpha(1);
+        this.congratsText = this.add.text(0, 0, "Congratulations - A New High Score!!", {
+            fontSize: 39, fontFamily: "Arial", color: "#535353", resolution: 5
+        }).setOrigin(1,0).setAlpha(0);
 
     }
 
@@ -117,11 +125,13 @@ export class Game extends Scene {
         this.player.setVelocityY(0);
         this.obstacles.clear(true, true);
         this.gameOverContainer.setAlpha(0); 
+        this.congratsText.setAlpha(0);
         this.frameCounter = 0;
         this.score = 0;
         const formattedScore = String(Math.floor(this.score)).padStart(5, "0");
         this.scoreText.setText(formattedScore);
         this.isGameRunning = true;
+        this.anims.resumeAll();
         })
 
         this.frameCounter++;
@@ -132,15 +142,41 @@ export class Game extends Scene {
             this.frameCounter == 100;
         }
 
+        this.anims.create({
+            key: "dino-run", frames: this.anims.generateFrameNames("dino", {start: 2, end: 3}), frameRate: 10, repeat: -1
+        });
+        // if jumping, do not display dino-run animation and display texture 
+        if (this.player.body.deltaAbsY() > 4) {
+        //temporarily stop the running animation 
+            this.player.anims.stop();
+            //set texture to the first frame (index 0) in the spritesheet 
+            this.player.setTexture("dino", 0);
+        } 
+        else {
+            //otherwise play the dino-run animation 
+            this.player.play("dino-run", true);
+        }
+
+
     }
 
 
 
 }
     function gameOver() {
+        //check to see if high score
+        if (this.score > this.highScore) {
+            //update high score variable 
+            this.highScore = this.score;
+            //update high score text
+            this.highScoreText.setText("High: " + String(this.highScore).padStart (5, "0"));
+        }
         this.physics.pause();
         this.timer = 0;
         this.isGameRunning = false;
         this.gameOverContainer.setAlpha(1);
+        this.congratsText.setAlpha(1);
+        this.anims.pauseAll();
+
     }
     
