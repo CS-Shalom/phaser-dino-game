@@ -21,6 +21,10 @@ export class Game extends Scene {
         //
         this.load.image ("game-over", "assets/game-over.png");
         this.load.image("restart", "assets/restart.png");
+        this.load.image("dino-hurt", "assets/dino-hurt.png");
+        //load sound assets
+        this.load.audio("jump", "assets/jump.m4a"); 
+        this.load.audio("hit", "assets/hit.m4a");   
 //
         for(let i = 0; i < 6; i++) {
         const cactusNum = i + 1;
@@ -116,8 +120,11 @@ export class Game extends Scene {
         //if (space.isDown || up.isDown) {
         //    this.player.setVelocityY (-1600);
         //}
-        if (Phaser.Input.Keyboard.JustDown (space) || Phaser.Input.Keyboard.JustDown (up) && this.player.body.onFloor() ) {
+      
+        if (Phaser.Input.Keyboard.JustDown (space) || Phaser.Input.Keyboard.JustDown (up) 
+            && this.player.body.onFloor() ) {
             this.player.setVelocityY(-1600);
+            this.sound.play("jump");
         }
         //
         this.restartText.on("pointerdown", () => {
@@ -157,9 +164,7 @@ export class Game extends Scene {
             this.player.play("dino-run", true);
         }
 
-
     }
-
 
 
 }
@@ -177,6 +182,9 @@ export class Game extends Scene {
         this.gameOverContainer.setAlpha(1);
         this.congratsText.setAlpha(1);
         this.anims.pauseAll();
+        this.player.setTexture("dino-hurt");
+        this.sound.play("hit");
+        this.player.setVelocityY(0);
 
     }
     
